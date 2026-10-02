@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" content="#e4eae8" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#0b1116" media="(prefers-color-scheme: dark)">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="每日计划">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <title>每日计划</title>
+    <link rel="stylesheet" href="styles.css?v=10">
+  </head>
+  <body>
+    <div class="wallpaper" aria-hidden="true"></div>
+    <div class="app-shell" id="app-shell" data-theme="light" data-accent="sky">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-icon" data-icon="calendar-check" aria-hidden="true"></span>
+          <div>
+            <strong>每日计划</strong>
+            <span>全年打卡与任务规划</span>
+          </div>
+        </div>
+
+        <nav class="nav-list" aria-label="主导航">
+          <button class="nav-item active" type="button" data-view="today">
+            <span data-icon="sun" aria-hidden="true"></span>
+            <span>今天</span>
+          </button>
+          <button class="nav-item" type="button" data-view="pomodoro">
+            <span data-icon="timer" aria-hidden="true"></span>
+            <span>番茄钟</span>
+          </button>
+          <button class="nav-item" type="button" data-view="year">
+            <span data-icon="calendar-days" aria-hidden="true"></span>
+            <span>全年打卡</span>
+          </button>
+          <button class="nav-item" type="button" data-view="tasks">
+            <span data-icon="list-check" aria-hidden="true"></span>
+            <span>任务管理</span>
+          </button>
+          <button class="nav-item" type="button" data-view="settings">
+            <span data-icon="settings" aria-hidden="true"></span>
+            <span>设置</span>
+          </button>
+        </nav>
+
+        <section class="streak-panel">
+          <div class="streak-label">
+            <span data-icon="flame" aria-hidden="true"></span>
+            连续打卡
+          </div>
+          <div class="streak-value"><span id="sidebar-streak">0</span> 天</div>
+          <div class="streak-note" id="sidebar-note">完成今天的任务即可开始连续打卡</div>
+        </section>
+      </aside>
+
+      <main class="main-area">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow" id="page-date">今天</p>
+            <h1 id="page-title">今天</h1>
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button" type="button" id="jump-today" aria-label="回到今天" data-icon="locate-fixed"></button>
+            <button class="primary-button" type="button" id="add-task-button">
+              <span data-icon="plus" aria-hidden="true"></span>
+              新建任务
+            </button>
+          </div>
+        </header>
+
+        <section class="view active" id="view-today" data-view-panel="today">
+          <div class="overview-grid">
+            <section class="metric-card metric-main">
+              <div>
+                <p class="metric-label">今日完成进度</p>
+                <div class="metric-value"><span id="today-progress-value">0 / 0</span><small>项任务</small></div>
+              </div>
+              <div class="progress-ring" id="today-progress-ring" aria-label="今日完成百分比">0%</div>
+              <div class="progress-track" aria-hidden="true"><span id="today-progress-bar"></span></div>
+            </section>
+            <section class="metric-card">
+              <p class="metric-label">全年打卡</p>
+              <div class="metric-value"><span id="year-checkin-count">0</span><small>天</small></div>
+              <p class="metric-note" id="year-checkin-note">还没有打卡记录</p>
+            </section>
+            <section class="metric-card">
+              <p class="metric-label">年度完成率</p>
+              <div class="metric-value"><span id="year-completion-rate">0</span><small>%</small></div>
+              <p class="metric-note" id="year-completion-note">按需要执行的日期计算</p>
+            </section>
+          </div>
+
+          <div class="today-grid">
+            <section class="glass-panel calendar-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">月度视图</p>
+                  <h2 id="calendar-month-title">2026年10月</h2>
+                </div>
+                <div class="month-controls">
+                  <button class="icon-button small" type="button" id="previous-month" aria-label="上个月" data-icon="chevron-left"></button>
+                  <button class="subtle-button" type="button" id="calendar-today-button">今天</button>
+                  <button class="icon-button small" type="button" id="next-month" aria-label="下个月" data-icon="chevron-right"></button>
+                </div>
+              </div>
+              <div class="calendar-weekdays" aria-hidden="true">
+                <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+              </div>
+              <div class="month-grid" id="month-grid" role="grid" aria-label="月历"></div>
+            </section>
+
+            <section class="glass-panel tasks-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">任务总览</p>
+                  <h2 id="selected-date-title">今天</h2>
+                </div>
+                <span class="status-pill" id="selected-day-status">休息日</span>
+              </div>
+              <div class="task-list" id="selected-task-list"></div>
+              <div class="checkin-footer">
+                <div>
+                  <strong id="checkin-title">今日尚未打卡</strong>
+                  <span id="checkin-note">完成全部必做任务后自动打卡</span>
+                </div>
+                <span class="checkin-mark" id="checkin-mark" data-icon="ellipsis" aria-hidden="true"></span>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="view" id="view-pomodoro" data-view-panel="pomodoro">
+          <div class="pomodoro-grid">
+            <section class="glass-panel pomodoro-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">专注计时</p>
+                  <h2 id="pomodoro-title">25 分钟专注</h2>
+                </div>
+                <span class="status-pill" id="pomodoro-status-pill">准备开始</span>
+              </div>
+
+              <div class="pomodoro-mode-switch" id="pomodoro-mode-switch" role="tablist" aria-label="番茄钟模式">
+                <button class="active" type="button" role="tab" aria-selected="true" data-pomodoro-mode="focus">专注</button>
+                <button type="button" role="tab" aria-selected="false" data-pomodoro-mode="short">短休息</button>
+                <button type="button" role="tab" aria-selected="false" data-pomodoro-mode="long">长休息</button>
+              </div>
+
+              <div class="pomodoro-stage">
+                <div class="pomodoro-ring" id="pomodoro-ring" role="timer" aria-live="off">
+                  <div class="pomodoro-ring-inner">
+                    <span class="pomodoro-time" id="pomodoro-time">25:00</span>
+                    <span class="pomodoro-mode-label" id="pomodoro-mode-label">专注时间</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pomodoro-actions">
+                <button class="primary-button pomodoro-start" type="button" id="pomodoro-start">
+                  <span data-icon="play" aria-hidden="true"></span>
+                  <span>开始专注</span>
+                </button>
+                <button class="subtle-button pomodoro-reset" type="button" id="pomodoro-reset">
+                  <span data-icon="rotate-ccw" aria-hidden="true"></span>
+                  重置
+                </button>
+                <button class="icon-button pomodoro-skip" type="button" id="pomodoro-skip" aria-label="跳过当前阶段" title="跳过当前阶段" data-icon="skip-forward"></button>
+              </div>
+
+              <div class="pomodoro-task-field">
+                <label for="pomodoro-task-select">关联今天的任务</label>
+                <select id="pomodoro-task-select"></select>
+                <span id="pomodoro-linked-task">未关联任务</span>
+              </div>
+            </section>
+
+            <aside class="pomodoro-aside">
+              <section class="glass-panel pomodoro-summary-panel">
+                <div class="panel-header">
+                  <div>
+                    <p class="panel-label">今日成果</p>
+                    <h2>专注统计</h2>
+                  </div>
+                  <span class="pomodoro-summary-icon" data-icon="timer" aria-hidden="true"></span>
+                </div>
+                <div class="pomodoro-metrics">
+                  <div class="pomodoro-metric">
+                    <span>完成周期</span>
+                    <strong><span id="pomodoro-today-count">0</span><small> 次</small></strong>
+                  </div>
+                  <div class="pomodoro-metric">
+                    <span>专注分钟</span>
+                    <strong><span id="pomodoro-today-minutes">0</span><small> 分钟</small></strong>
+                  </div>
+                </div>
+                <div class="pomodoro-cycle">
+                  <div>
+                    <span>长休息进度</span>
+                    <strong id="pomodoro-cycle-label">0 / 4</strong>
+                  </div>
+                  <div class="pomodoro-cycle-dots" id="pomodoro-cycle-dots" aria-hidden="true">
+                    <i></i><i></i><i></i><i></i>
+                  </div>
+                </div>
+              </section>
+
+              <section class="glass-panel pomodoro-note-panel">
+                <span data-icon="target" aria-hidden="true"></span>
+                <div>
+                  <strong>保持专注节奏</strong>
+                  <p>现在，只专注眼前这一件事。</p>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-year" data-view-panel="year">
+          <section class="glass-panel year-panel">
+            <div class="panel-header">
+              <div>
+                <p class="panel-label">365 / 366 天</p>
+                <h2 id="year-view-title">2026 年打卡热力图</h2>
+              </div>
+              <div class="year-controls">
+                <button class="icon-button small" type="button" id="previous-year" aria-label="上一年" data-icon="chevron-left"></button>
+                <button class="subtle-button" type="button" id="current-year-button">今年</button>
+                <button class="icon-button small" type="button" id="next-year" aria-label="下一年" data-icon="chevron-right"></button>
+              </div>
+            </div>
+            <div class="year-layout">
+              <div class="year-heatmap-wrap">
+                <div class="year-months" id="year-months" aria-hidden="true"></div>
+                <div class="year-heatmap" id="year-heatmap" aria-label="全年打卡热力图"></div>
+                <div class="heatmap-legend" aria-hidden="true">
+                  <span>少</span><i data-level="0"></i><i data-level="1"></i><i data-level="2"></i><i data-level="3"></i><i data-level="4"></i><span>多</span>
+                </div>
+              </div>
+              <aside class="year-summary">
+                <div class="summary-block">
+                  <span>已打卡</span>
+                  <strong id="year-summary-checkins">0 天</strong>
+                </div>
+                <div class="summary-block">
+                  <span>最长连续</span>
+                  <strong id="year-summary-best-streak">0 天</strong>
+                </div>
+                <div class="summary-block">
+                  <span>需要完成</span>
+                  <strong id="year-summary-required">0 天</strong>
+                </div>
+                <div class="summary-block">
+                  <span>错过日期</span>
+                  <strong id="year-summary-missed">0 天</strong>
+                </div>
+              </aside>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-tasks" data-view-panel="tasks">
+          <section class="glass-panel task-manager">
+            <div class="panel-header">
+              <div>
+                <p class="panel-label">全部任务</p>
+                <h2>日常习惯与区间任务</h2>
+              </div>
+              <button class="primary-button" type="button" id="add-task-button-secondary">
+                <span data-icon="plus" aria-hidden="true"></span>
+                新建任务
+              </button>
+            </div>
+            <div class="task-tabs" role="tablist" aria-label="任务类型">
+              <button class="task-tab active" type="button" role="tab" aria-selected="true" data-task-filter="all">全部</button>
+              <button class="task-tab" type="button" role="tab" aria-selected="false" data-task-filter="daily">每日习惯</button>
+              <button class="task-tab" type="button" role="tab" aria-selected="false" data-task-filter="range">区间任务</button>
+              <button class="task-tab" type="button" role="tab" aria-selected="false" data-task-filter="archived">已归档</button>
+            </div>
+            <div class="manager-list" id="manager-list"></div>
+          </section>
+        </section>
+
+        <section class="view" id="view-settings" data-view-panel="settings">
+          <div class="settings-grid">
+            <section class="glass-panel settings-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">提醒</p>
+                  <h2>每日通知</h2>
+                </div>
+                <span class="status-pill" id="notification-status">已开启</span>
+              </div>
+              <label class="setting-row">
+                <span>
+                  <strong>启用任务提醒</strong>
+                  <small>网页或主屏幕应用打开时，通过浏览器通知提醒未完成任务</small>
+                </span>
+                <input class="switch" type="checkbox" id="notify-enabled">
+              </label>
+              <label class="setting-row">
+                <span>
+                  <strong>默认任务提醒时间</strong>
+                  <small>没有单独设置提醒时间的任务会使用该时间</small>
+                </span>
+                <input class="time-input" type="time" id="default-reminder-time">
+              </label>
+              <label class="setting-row">
+                <span>
+                  <strong>晚间汇总检查</strong>
+                  <small>网页打开时，达到该时间后汇总仍未完成的任务</small>
+                </span>
+                <input class="time-input" type="time" id="daily-summary-time">
+              </label>
+              <div class="setting-actions">
+                <button class="subtle-button" type="button" id="test-notification">测试提醒</button>
+                <span class="setting-feedback" id="notification-feedback"></span>
+              </div>
+            </section>
+
+            <section class="glass-panel settings-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">外观</p>
+                  <h2>简约玻璃材质</h2>
+                </div>
+              </div>
+              <div class="setting-row">
+                <span>
+                  <strong>显示模式</strong>
+                  <small>所有页面即时切换</small>
+                </span>
+                <div class="segmented" id="theme-control">
+                  <button type="button" data-theme-choice="light" aria-pressed="true">浅色</button>
+                  <button type="button" data-theme-choice="dark" aria-pressed="false">深色</button>
+                </div>
+              </div>
+              <div class="setting-row">
+                <span>
+                  <strong>强调色</strong>
+                  <small>用于按钮、进度和打卡状态</small>
+                </span>
+                <div class="swatches" id="accent-control">
+                  <button type="button" data-accent-choice="sky" aria-label="天空蓝"></button>
+                  <button type="button" data-accent-choice="sage" aria-label="鼠尾草绿"></button>
+                  <button type="button" data-accent-choice="rose" aria-label="柔雾红"></button>
+                </div>
+              </div>
+              <label class="setting-row vertical">
+                <span>
+                  <strong>玻璃模糊程度</strong>
+                  <small id="blur-value">26 px</small>
+                </span>
+                <input class="range-input" type="range" id="blur-range" min="12" max="38" value="26">
+              </label>
+              <label class="setting-row">
+                <span>
+                  <strong>界面动画</strong>
+                  <small>勾选、打卡完成和连续天数变化时使用轻量反馈</small>
+                </span>
+                <input class="switch" type="checkbox" id="animation-enabled">
+              </label>
+            </section>
+
+            <section class="glass-panel settings-panel">
+              <div class="panel-header">
+                <div>
+                  <p class="panel-label">数据</p>
+                  <h2>备份与恢复</h2>
+                </div>
+              </div>
+              <div class="data-actions">
+                <button class="subtle-button" type="button" id="export-data">
+                  <span data-icon="download" aria-hidden="true"></span>
+                  导出备份
+                </button>
+                <button class="subtle-button" type="button" id="import-data-button">
+                  <span data-icon="upload" aria-hidden="true"></span>
+                  导入备份
+                </button>
+                <input type="file" id="import-data-input" accept=".json,application/json" hidden>
+                <button class="danger-button" type="button" id="reset-data">
+                  <span data-icon="trash-2" aria-hidden="true"></span>
+                  清空全部数据
+                </button>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="modal-backdrop" id="task-modal" hidden>
+      <section class="modal" role="dialog" aria-modal="true" aria-labelledby="task-modal-title">
+        <header class="modal-header">
+          <div>
+            <p class="panel-label" id="task-modal-label">创建任务</p>
+            <h2 id="task-modal-title">新建任务</h2>
+          </div>
+          <button class="icon-button" type="button" id="close-task-modal" aria-label="关闭" data-icon="x"></button>
+        </header>
+
+        <form id="task-form">
+          <input type="hidden" id="task-id">
+          <label class="form-field">
+            <span>任务名称</span>
+            <input type="text" id="task-title" maxlength="80" required placeholder="例如：晚上阅读 30 分钟">
+          </label>
+
+          <div class="form-grid">
+            <label class="form-field">
+              <span>任务类型</span>
+              <select id="task-type">
+                <option value="daily">每日习惯</option>
+                <option value="range">区间任务</option>
+              </select>
+            </label>
+            <label class="form-field">
+              <span>提醒时间</span>
+              <input type="time" id="task-reminder-time">
+            </label>
+          </div>
+
+          <div id="daily-fields">
+            <div class="form-field">
+              <span>重复日期</span>
+              <div class="weekday-picker" id="weekday-picker">
+                <label><input type="checkbox" value="1" checked><span>一</span></label>
+                <label><input type="checkbox" value="2" checked><span>二</span></label>
+                <label><input type="checkbox" value="3" checked><span>三</span></label>
+                <label><input type="checkbox" value="4" checked><span>四</span></label>
+                <label><input type="checkbox" value="5" checked><span>五</span></label>
+                <label><input type="checkbox" value="6" checked><span>六</span></label>
+                <label><input type="checkbox" value="0" checked><span>日</span></label>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label class="form-field">
+                <span>开始日期</span>
+                <input type="date" id="daily-start-date" required>
+              </label>
+              <label class="form-field">
+                <span>结束日期（可选）</span>
+                <input type="date" id="daily-end-date">
+              </label>
+            </div>
+          </div>
+
+          <div id="range-fields" hidden>
+            <div class="form-grid">
+              <label class="form-field">
+                <span>开始日期</span>
+                <input type="date" id="range-start-date">
+              </label>
+              <label class="form-field">
+                <span>结束日期</span>
+                <input type="date" id="range-end-date">
+              </label>
+            </div>
+            <label class="form-field">
+              <span>区间内需要完成次数</span>
+              <input type="number" id="range-target-count" min="1" max="365" value="1">
+            </label>
+            <p class="form-help">设置为 1 时表示在截止日期前完成一次；大于 1 时表示区间内累计完成指定次数。</p>
+          </div>
+
+          <p class="form-error" id="task-form-error" role="alert"></p>
+
+          <footer class="modal-footer">
+            <button class="subtle-button" type="button" id="cancel-task-button">取消</button>
+            <button class="primary-button" type="submit">保存任务</button>
+          </footer>
+        </form>
+      </section>
+    </div>
+
+    <div class="confirm-backdrop" id="confirm-dialog" hidden>
+      <section class="confirm-box" role="alertdialog" aria-modal="true" aria-labelledby="confirm-title">
+        <h2 id="confirm-title">确认操作</h2>
+        <p id="confirm-message">此操作无法撤销。</p>
+        <div class="confirm-actions">
+          <button class="subtle-button" type="button" id="confirm-cancel">取消</button>
+          <button class="danger-button" type="button" id="confirm-ok">确认</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="toast-stack" id="toast-stack" aria-live="polite"></div>
+
+    <script src="icons.js?v=10"></script>
+    <script src="app.js?v=10"></script>
+    <script src="pwa.js?v=1"></script>
+  </body>
+</html>
